@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<title>Dynamic Example</title>
+<body>
+<form action="DynamicServlet.do" method="get">
+    <div>
+        <input type="text" name="username" id="veld" />
+        <input type="submit" value="Go!" />
+    </div>
+</form>
+<script type="application/javascript">
+    setInterval(function() {
+        console.log(document.getElementById("veld").value)
+    }, 5000);
+</script>
+</body>
+</html>
