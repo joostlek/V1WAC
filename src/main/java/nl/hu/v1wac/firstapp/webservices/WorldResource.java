@@ -6,12 +6,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import java.sql.SQLException;
 
 @Path("/countries")
 public class WorldResource  {
     @GET
     @Produces("application/json")
-    public String getOrders() {
+    public String getOrders() throws SQLException {
         Gson gson = new Gson();
         return gson.toJson(ServiceProvider.getWorldService().getAllCountries());
     }
@@ -19,7 +20,7 @@ public class WorldResource  {
     @GET
     @Path("{code}")
     @Produces("application/json")
-    public String getApplicationByCode(@PathParam("code") String code) {
+    public String getApplicationByCode(@PathParam("code") String code) throws SQLException {
         Gson gson = new Gson();
         if (code.equals("largestsurfaces")) {
             return gson.toJson(ServiceProvider.getWorldService().get10LargestSurfaces());
