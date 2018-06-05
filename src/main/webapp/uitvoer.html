@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <label id="LABEL"></label>
+<script>
+    document.getElementById('LABEL').innerText = localStorage.getItem('ITEM');
+    window.addEventListener('storage', function(e) {
+        document.getElementById('LABEL').innerText = e.newValue;
+    })
+</script>
+</body>
+</html>

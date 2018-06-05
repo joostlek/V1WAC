@@ -5,6 +5,7 @@
     <title>Title</title>
     <link rel="stylesheet" href="reset.css" type="text/css">
     <link rel="stylesheet" href="weer.css" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 <div id="frame">
@@ -43,6 +44,9 @@
 </div>
 <script type="text/javascript">
     function initPage() {
+        if (localStorage.getItem('weather') === null) {
+            localStorage.setItem('weather', JSON.stringify({}));
+        }
         fetch('https://ipapi.co/json/')
             .then(function (response) {
                 return response.json();
@@ -70,21 +74,34 @@
             });
     }
     function showWeather(latitude, longitude, city) {
-        fetch('https://api.openweathermap.org/data/2.5/weather?lat=' + latitude + '&lon=' + longitude +'&units=metric&APPID=84deff6c3b512556b7b6553226d9daff')
-            .then(function (response) {
-                return response.json();
-            })
-            .then(function (res) {
-                let list = document.getElementById('weatherInfo').children;
-                for (let ele in list) {
-                    let element = list[ele];
-                    if (element.localName === 'label' && element.classList[0] !== 'label') {
-                        element.innerText = format(res[element.classList[0]][element.id], element.classList[1]);
-                    } else if (element.localName === 'h1' && element.id === 'header') {
-                        element.innerText = 'Het weer in ' + city;
-                    }
-                }
-            })
+        let weather = JSON.parse(localStorage.getItem('weather'));
+        if (weather[city] !== undefined && weather[city]['expired'] > new Date().getTime()) {
+            fillWeather(weather[city], city);
+        } else {
+            fetch('https://api.openweathermap.org/data/2.5/weather?lat=' + latitude + '&lon=' + longitude +'&units=metric&APPID=84deff6c3b512556b7b6553226d9daff')
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (res) {
+                    fillWeather(res, city);
+                    let date = new Date();
+                    date.setMinutes(date.getMinutes() + 10);
+                    res['expired'] = date.getTime();
+                    weather[city] = res;
+                    localStorage.setItem('weather', JSON.stringify(weather));
+                })
+        }
+    }
+    function fillWeather(res, city) {
+        let list = document.getElementById('weatherInfo').children;
+        for (let ele in list) {
+            let element = list[ele];
+            if (element.localName === 'label' && element.classList[0] !== 'label') {
+                element.innerText = format(res[element.classList[0]][element.id], element.classList[1]);
+            } else if (element.localName === 'h1' && element.id === 'header') {
+                element.innerText = 'Het weer in ' + city;
+            }
+        }
     }
     function format(value, type) {
         if (type === undefined) {
