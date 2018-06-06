@@ -27,12 +27,12 @@ public class CountryPostgresDaoImpl extends PostgresBaseDao implements CountryDa
         preparedStatement.setDouble(10, country.getLatitude());
         preparedStatement.setDouble(11, country.getLongitude());
         preparedStatement.setString(12, country.getCapital());
-        return preparedStatement.execute();
+        return preparedStatement.executeUpdate() == 1;
     }
 
     @Override
     public List<Country> findAll() throws SQLException {
-        return getList(super.getConnection().prepareStatement("SELECT * FROM country").executeQuery());
+        return getList(super.getConnection().prepareStatement("SELECT * FROM country ORDER BY name ASC").executeQuery());
     }
 
     @Override
@@ -68,14 +68,14 @@ public class CountryPostgresDaoImpl extends PostgresBaseDao implements CountryDa
         preparedStatement.setDouble(9, country.getLatitude());
         preparedStatement.setDouble(10, country.getLongitude());
         preparedStatement.setString(11, country.getIso3());
-        return preparedStatement.execute();
+        return preparedStatement.executeUpdate() == 1;
     }
 
     @Override
     public boolean delete(Country country) throws SQLException {
         PreparedStatement preparedStatement = super.getConnection().prepareStatement("DELETE FROM country WHERE iso3 = ?");
         preparedStatement.setString(1, country.getIso3());
-        return preparedStatement.execute();
+        return preparedStatement.executeUpdate() == 1;
     }
 
     private List<Country> getList(ResultSet resultSet) throws SQLException {

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="reset.css" type="text/css">
+    <link rel="stylesheet" href="weer.css" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div id="frame">
+    <div id="myLocation">
+        <h1>Location</h1>
+        <label class="label">Landcode: </label><label id="country"></label><br>
+        <label class="label">Land: </label><label id="country_name"></label><br>
+        <label class="label">Regio: </label><label id="region"></label><br>
+        <label class="label">Stad: </label><label id="city"></label><br>
+        <label class="label">Postcode: </label><label id="postal"></label><br>
+        <label class="label">Latitude: </label><label id="latitude"></label><br>
+        <label class="label">longitude: </label><label id="longitude"></label><br>
+        <label class="label">IP: </label><label id="ip"></label><br>
+    </div>
+    <div id="weatherInfo">
+        <h1 id="header">Het weer in  </h1>
+        <label class="label">Temperatuur: </label><label id="temp" class="main celsius"></label><br>
+        <label class="label">Luchtvochtigheid: </label><label id="humidity" class="main"></label><br>
+        <label class="label">Windsnelheid: </label><label id="speed" class="wind speed"></label><br>
+        <label class="label">Windrichting: </label><label id="deg" class="wind angle"></label><br>
+        <label class="label">Zonsopgang: </label><label id="sunrise" class="sys time"></label><br>
+        <label class="label">Zonsondergang: </label><label id="sunset" class="sys time"></label><br>
+    </div>
+    <div id="countryList">
+        <h1>Beschikbare vakantiebestemmingen</h1>
+        <form id="form" class="invisible">
+            <input id="iiso3" name="iso3" type="text"><br>
+            <input id="icode" name="code" type="text" placeholder="code"><br>
+            <input id="iname" name="name" type="text" placeholder="name"><br>
+            <input id="icapital" name="capital" type="text" placeholder="capital"><br>
+            <input id="iregion" name="region" type="text" placeholder="region"><br>
+            <input id="isurface" name="surface" type="number" placeholder="surface"><br>
+            <input id="ipopulation" name="population" type="number" placeholder="population"><br>
+            <input id="icontinent" name="population" type="text" placeholder="continent"><br>
+            <input id="igovernment" name="government" type="text" placeholder="government"><br>
+            <input id="ilatitude" name="latitude" type="text" placeholder="latitude"><br>
+            <input id="ilongitude" name="longitude" type="text" placeholder="longitude"><br>
+            <input id="edit" value="Save" type="button" onclick="save()">
+        </form>
+        <input id="new" value="New" type="button" onclick="newCountry()">
+        <input id="close" value="Close" type="button" class="invisible" onclick="close()">
+        <input id="delete" value="Delete" type="button" class="invisible" onclick="deleteCountry()">
+        <input id="filter" type="text" onchange="filter()" placeholder="Filter">
+        <table id="country-table">
+            <thead>
+            <tr>
+                <th onclick="sort('name')">Land</th>
+                <th onclick="sort('capital')">Hoofdstad</th>
+                <th onclick="sort('region')">Regio</th>
+                <th onclick="sort('surface')">Oppervlakte</th>
+                <th onclick="sort('population')">Inwoners</th>
+            </tr>
+            </thead>
+            <tbody id="table-body">
+            </tbody>
+        </table>
+    </div>
+</div>
+<script type="text/javascript">
+    let countries = [];
+    let currentEditing = null;
+    let newCount = false;
+    let originalCountries = [];
+    function initPage() {
+        if (localStorage.getItem('weather') === null) {
+            localStorage.setItem('weather', JSON.stringify({}));
+        }
+        loadCountries();
+        fetch('https://ipapi.co/json/')
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (res) {
+                for (let k in res) {
+                    try {
+                        if (res.hasOwnProperty(k)) {
+                            if (k === 'city') {
+                                let a = document.createElement('A');
+                                a.onclick = function () {
+                                    showWeather(res['latitude'], res['longitude'], res['city'])
+                                };
+                                a.innerText = res['city'];
+                                document.getElementById('city').appendChild(a);
+                            } else {
+                                document.getElementById(k).innerText = res[k];
+                            }
+                        }
+                    } catch (e) {
+                    }
+                }
+                showWeather(res.latitude, res.longitude, res.city);
+            });
+    }
+    function showWeather(latitude, longitude, city) {
+        let weather = JSON.parse(localStorage.getItem('weather'));
+        if (weather[city] !== undefined && weather[city]['expired'] > new Date().getTime()) {
+            fillWeather(weather[city], city);
+        } else {
+            fetch('https://api.openweathermap.org/data/2.5/weather?lat=' + latitude + '&lon=' + longitude +'&units=metric&APPID=84deff6c3b512556b7b6553226d9daff')
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (res) {
+                    fillWeather(res, city);
+                    let date = new Date();
+                    date.setMinutes(date.getMinutes() + 10);
+                    res['expired'] = date.getTime();
+                    weather[city] = res;
+                    localStorage.setItem('weather', JSON.stringify(weather));
+                })
+        }
+    }
+    function fillWeather(res, city) {
+        let list = document.getElementById('weatherInfo').children;
+        for (let ele in list) {
+            let element = list[ele];
+            if (element.localName === 'label' && element.classList[0] !== 'label') {
+                element.innerText = format(res[element.classList[0]][element.id], element.classList[1]);
+            } else if (element.localName === 'h1' && element.id === 'header') {
+                element.innerText = 'Het weer in ' + city;
+            }
+        }
+    }
+    function format(value, type) {
+        if (type === undefined) {
+            return value;
+        } else if (type === 'celsius') {
+            return value + ' °C';
+        } else if (type === 'speed') {
+            return value + ' km/h';
+        } else if (type === 'time') {
+            return new Date(value * 1000).toLocaleTimeString();
+        } else if (type === 'angle') {
+            return degToCompass(value);
+        }
+    }
+    function filter() {
+        let term = document.getElementById('filter').value;
+        countries = originalCountries;
+        if (term !== '') {
+            countries = originalCountries;
+            countries = countries.filter(function (item) {
+                return item.name.includes(term) || item.capital.includes(term) || item.region.includes(term);
+            });
+        }
+        renderCountries(countries);
+    }
+    function degToCompass(num) {
+        let val = Math.floor((num / 90) + 0.5);
+        let arr = ["Noord", "Oost", "Zuid", "West"];
+        return arr[(val % 4)];
+    }
+    function sortByKey(array, key) {
+        return array.sort(function(a, b) {
+            let x = a[key]; let y = b[key];
+            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+        });
+    }
+    function renderCountries(countries, sort='name') {
+        let newtable = document.createElement('tbody');
+        newtable.id = 'table-body';
+        let columns = ['name', 'capital', 'region', 'surface', 'population'];
+        countries = sortByKey(countries, sort);
+        for (let i in countries) {
+            if (countries.hasOwnProperty(i)) {
+                let country = countries[i];
+                let row = document.createElement('TR');
+                for (let c in columns) {
+                    if (columns.hasOwnProperty(c)) {
+                        let column = document.createElement('TD');
+                        if (columns[c] === 'capital') {
+                            let a = document.createElement('A');
+                            a.onclick = function () {
+                                showWeather(country['latitude'], country['longitude'], country['capital'])
+                            };
+                            a.innerText = country[columns[c]];
+                            column.appendChild(a);
+                            column.onmouseover = function() {
+                                column.style.cursor = 'pointer';
+                                column.style.backgroundColor = '#FFFFFF';
+                            };
+                            column.onmouseleave = function() {
+                                column.style.backgroundColor = '#00000000';
+                            }
+                        } else {
+                            column.appendChild(document.createTextNode(country[columns[c]]));
+                        }
+                        row.appendChild(column);
+                    }
+                }
+                row.onclick = function () {
+                    edit(country);
+                };
+                newtable.appendChild(row);
+            }
+        }
+        document.getElementById('table-body').parentNode.replaceChild(newtable, document.getElementById('table-body'));
+    }
+    function loadCountries() {
+        fetch('restservices/countries')
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (resp) {
+                countries = resp;
+                originalCountries = resp;
+                renderCountries(resp);
+            })
+    }
+    function edit(country) {
+        setCurrentEditing(country);
+        newCount = false;
+        for (let k in country) {
+            if (country.hasOwnProperty(k)) {
+                try {
+                    document.getElementById('i' + k).value = country[k];
+                } catch (e) {
+                }
+            }
+        }
+        document.getElementById('iiso3').setAttribute('disabled', 'true');
+        document.getElementById('delete').setAttribute('class', 'visible');
+    }
+    function deleteCountry() {
+        fetch('restservices/countries', {
+            body: JSON.stringify(currentEditing),
+            method: 'DELETE',
+        })
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (res) {
+                if (res === true) {
+                    countries = removeCountry(countries, currentEditing['iso3']);
+                    close();
+                    renderCountries(countries);
+                }
+            })
+    }
+    function removeCountry(countries, iso3) {
+        return countries.filter(function (el) {
+            return el.iso3 !== iso3;
+        })
+    }
+    function newCountry() {
+        currentEditing = undefined;
+        newCount = true;
+        document.getElementById('form').setAttribute('class', 'visible');
+        document.getElementById('delete').setAttribute('class', 'invisible');
+    }
+    function setCurrentEditing(country) {
+        currentEditing = country;
+        document.getElementById('form').setAttribute('class', 'visible');
+        document.getElementById('delete').setAttribute('class', 'visible');
+    }
+    function close() {
+        newCount = false;
+        currentEditing = undefined;
+        document.getElementById('form').setAttribute('class', 'invisible');
+        document.getElementById('delete').setAttribute('class', 'invisible');
+    }
+    function sort(term) {
+        renderCountries(countries, term);
+    }
+    function save() {
+        let fields = ['iso3', 'code', 'name', 'capital', 'region', 'surface', 'population', 'continent', 'government', 'latitude', 'longitude'];
+        if (newCount === true || currentEditing['iso3'] === document.getElementById('iiso3').value) {
+            if (newCount === true) {
+                currentEditing = {};
+            }
+            for (let field in fields) {
+                if (fields.hasOwnProperty(field)) {
+                    if (document.getElementById('i' + fields[field]) !== null) {
+                        currentEditing[fields[field]] = document.getElementById('i' + fields[field]).value;
+                    }
+                }
+            }
+            if (newCount === true) {
+                fetch('restservices/countries', {
+                    body: JSON.stringify(currentEditing),
+                    method: 'POST',
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (res) {
+                        console.log(res);
+                        if (res === true) {
+                            countries.push(currentEditing);
+                            renderCountries(countries);
+                            close();
+                        }
+                    })
+            } else {
+                fetch('restservices/countries', {
+                    body: JSON.stringify(currentEditing),
+                    method: 'PUT',
+                })
+                    .then(function (response) {
+                        return response.json();
+                    })
+                    .then(function (res) {
+                        if (res === true) {
+                            countries = removeCountry(countries, currentEditing['iso3']);
+                            countries.push(currentEditing);
+                            renderCountries(countries);
+                            close();
+                        }
+                    })
+            }
+        }
+    }
+    initPage();
+</script>
+</body>
+</html>

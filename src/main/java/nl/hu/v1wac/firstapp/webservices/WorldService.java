@@ -29,4 +29,19 @@ public class WorldService {
         CountryPostgresDaoImpl countryPostgresDao = new CountryPostgresDaoImpl();
         return countryPostgresDao.findByCode(code);
     }
+
+    public boolean updateCountry(Country country) throws SQLException {
+        CountryPostgresDaoImpl countryPostgresDao = new CountryPostgresDaoImpl();
+        return countryPostgresDao.update(country);
+    }
+
+    public boolean newCountry(Country country) throws SQLException {
+        CountryPostgresDaoImpl countryPostgresDao = new CountryPostgresDaoImpl();
+        return countryPostgresDao.save(country);
+    }
+
+    public boolean deleteCountry(Country country) throws SQLException {
+        CountryPostgresDaoImpl countryPostgresDao = new CountryPostgresDaoImpl();
+        return countryPostgresDao.delete(country);
+    }
 }

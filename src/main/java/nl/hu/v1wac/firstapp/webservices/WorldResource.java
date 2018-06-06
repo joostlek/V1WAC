@@ -2,10 +2,7 @@ package nl.hu.v1wac.firstapp.webservices;
 
 import com.google.gson.Gson;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import java.sql.SQLException;
 
 @Path("/countries")
@@ -28,5 +25,29 @@ public class WorldResource  {
             return gson.toJson(ServiceProvider.getWorldService().get10LargestPopulations());
         }
         return gson.toJson(ServiceProvider.getWorldService().getCountryByCode(code));
+    }
+
+    @PUT
+    @Produces("application/json")
+    public String updateCountry(String message) throws SQLException {
+        Gson gson = new Gson();
+        Country country = gson.fromJson(message, Country.class);
+        return gson.toJson(ServiceProvider.getWorldService().updateCountry(country));
+    }
+
+    @POST
+    @Produces("application/json")
+    public String newCountry(String message) throws SQLException {
+        Gson gson = new Gson();
+        Country country = gson.fromJson(message, Country.class);
+        return gson.toJson(ServiceProvider.getWorldService().newCountry(country));
+    }
+
+    @DELETE
+    @Produces("application/json")
+    public String deleteCountry(String message) throws SQLException {
+        Gson gson = new Gson();
+        Country country = gson.fromJson(message, Country.class);
+        return gson.toJson(ServiceProvider.getWorldService().deleteCountry(country));
     }
 }
