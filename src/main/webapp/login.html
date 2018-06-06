@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script type="text/javascript">
+    function se(event) {
+        let form = document.getElementById('form');
+        let formData = new FormData(form);
+        fetch("restservices/authentication", {
+            body: new URLSearchParams(formData.entries()),
+            method: 'POST',
+        })
+            .then(function (reponse) {
+                return reponse.json();
+            })
+            .then(function (res) {
+                sessionStorage.setItem('sessionToken', res);
+                window.location.replace("lijst.html");
+            })
+    }
+</script>
+<form id="form">
+    <input type="text" name="username" placeholder="username">
+    <input type="password" name="password" placeholder="password">
+    <input type="button" id="send" onclick="se()">
+</form>
+</body>
+</html>

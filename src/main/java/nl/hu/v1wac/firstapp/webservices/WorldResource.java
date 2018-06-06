@@ -2,12 +2,14 @@ package nl.hu.v1wac.firstapp.webservices;
 
 import com.google.gson.Gson;
 
+import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import java.sql.SQLException;
 
 @Path("/countries")
 public class WorldResource  {
     @GET
+    @RolesAllowed({"user", "admin"})
     @Produces("application/json")
     public String getOrders() throws SQLException {
         Gson gson = new Gson();
@@ -36,6 +38,7 @@ public class WorldResource  {
     }
 
     @POST
+    @RolesAllowed("admin")
     @Produces("application/json")
     public String newCountry(String message) throws SQLException {
         Gson gson = new Gson();
